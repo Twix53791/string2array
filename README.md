@@ -1,5 +1,5 @@
 # string2array
-Bash utility string to array quote parsing
+Bash utility string to array with quote parsing
 
 ## USAGE
       string2array <option> "string"
