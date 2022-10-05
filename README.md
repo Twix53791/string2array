@@ -21,4 +21,4 @@ done < <(string2array -s "\"" $string)
 
 ### INSTALLATION
 
-Just copy the string2array file into /usr/local/bin or any bin PATH location you want
+Just copy the string2array file into /usr/local/bin or any bin PATH location you want.
