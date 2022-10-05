@@ -19,6 +19,6 @@ while read line; do
 done < <(string2array -s "\"" $string)
 ```
 
-# INSTALLATION
+### INSTALLATION
 
 Just copy the string2array file into /usr/local/bin or any bin PATH location you want
