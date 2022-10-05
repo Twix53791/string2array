@@ -1,0 +1,75 @@
+#!/bin/bash
+# MADE by twix https://github.com/Twix53791
+# https://github.com/Twix53791/string2array
+#==========================================
+# USAGE
+# string2array <option> "string"
+# ex: toto="1 \"2 5\" 7 toto"; string2array -s "\"" $toto
+# ex: string2array -s "\[section\]" "1 2 [section]5 6 7 [section]"
+#
+# The script returns the array elements parsed line by line
+# To use it to set an array inside a bash script:
+#     mapfile myarray < <(string2array $string)
+# OR
+#     while read line; do
+#        myarray+=("$line")
+#     done < <(string2array -s "\"" $string)
+#
+# CONFIG
+# Default separator character
+sep="'"
+#===========================================
+
+# Help message
+_help () {
+cat <<EOF
+Bash utility string to array quote parsing
+
+USAGE:
+   string2array <option> <string>
+options:
+   -s    set the separator character(s)
+EOF
+exit
+}
+
+[[ $1 == "-h" || $1 == "--help" ]] && _help
+
+# Separator option
+if [[ $1 == -s ]]; then
+   sep="$2"
+   shift 2
+fi
+
+# Force parsing if missing separators
+_force_parsing () {
+   parsing=($1)
+   output+=("${parsing[@]}")
+   _output "${output[@]}"
+}
+
+# Output
+_output () {
+   for el in "$@";do
+      echo "$el"
+   done
+   exit
+}
+
+# Parse string
+
+string="$@"
+[[ $string != *"$sep"* ]] && _force_parsing "$string"
+
+until [[ -z $string ]]; do
+   parse0="${string%%$sep*}"
+   parse0=($parse0)
+   output+=("${parse0[@]}")
+   string="${string#*$sep}"
+
+   [[ $string != *$sep* ]] && _force_parsing "$string"
+   output+=("${string%%$sep*}")
+   string="${string#*$sep}"
+done
+
+_output "${output[@]}"
