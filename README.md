@@ -18,3 +18,7 @@ while read line; do
     myarray+=("$line")
 done < <(string2array -s "\"" $string)
 ```
+
+# Installation
+
+Just copy the string2array file into /usr/local/bin or any bin PATH location you want
