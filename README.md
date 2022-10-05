@@ -7,7 +7,7 @@ Bash utility string to array quote parsing
 * `toto="1 \"2 5\" 7 toto"; string2array -s "\"" $toto`
 * `string2array -s "\[section\]" "1 2 [section]5 6 7 [section]"`
 
-The script returns the array elements parsed line by line
+The script returns the array elements parsed line by line.
 To use it to set an array inside a bash script:
 ```bash
 mapfile myarray < <(string2array $string)
