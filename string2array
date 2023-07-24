@@ -72,7 +72,6 @@ _output () {
 }
 
 # Parse string
-
 [[ $string != *"$sep"* ]] && _bash_parsing "$string"
 betweensep=0
 
