@@ -2,15 +2,14 @@
 # MADE by twix https://github.com/Twix53791
 # https://github.com/Twix53791/string2array
 #==========================================
+# Parse string by spaces and by any substring/character separator
 # USAGE
 # string2array <option> "string"
 # ex: toto="1 \"2 5\" 7 toto"; string2array -s "\"" $toto
 # ex: string2array -s "\[section\]" "1 2 [section]5 6 7 [section]"
 #
-# The script returns the array elements parsed line by line
+# The script returns the array elements parsed, line by line
 # To use it to set an array inside a bash script:
-#     mapfile myarray < <(string2array $string)
-# OR
 #     while read line; do
 #        myarray+=("$line")
 #     done < <(string2array -s "\"" $string)
@@ -28,21 +27,37 @@ Bash utility string to array quote parsing
 USAGE:
    string2array <option> <string>
 options:
-   -s    set the separator character(s)
+   -s             set the separator character(s)
+   --any-sep      cut y any separator, even it is not preceded by a space
+   --only-sep     ignore spaces, cut only by separator
 EOF
 exit
 }
 
 [[ $1 == "-h" || $1 == "--help" ]] && _help
 
-# Separator option
-if [[ $1 == -s ]]; then
-   sep="$2"
-   shift 2
-fi
+# Options
 
-# Force parsing if missing separators
-_force_parsing () {
+for arg in "$@"; do
+   case $arg in
+      -s) sep="$2"; shift 2;;
+      --only-sep) onlysep=1; shift;;
+      --any-sep) anysep=1; shift;;
+   esac
+done
+
+string="$@"
+
+if [[ -z $string && -p /dev/stdin ]]; then
+   while IFS= read line; do
+      string+="$line"
+   done
+elif [[ -z $string ]]; then
+   echo "string2array ERRPR :: No string given. Exit"
+   exit
+fi
+# Bash parsing if missing separators
+_bash_parsing () {
    parsing=($1)
    output+=("${parsing[@]}")
    _output "${output[@]}"
@@ -58,18 +73,51 @@ _output () {
 
 # Parse string
 
-string="$@"
-[[ $string != *"$sep"* ]] && _force_parsing "$string"
+[[ $string != *"$sep"* ]] && _bash_parsing "$string"
+betweensep=0
 
 until [[ -z $string ]]; do
-   parse0="${string%%$sep*}"
-   parse0=($parse0)
-   output+=("${parse0[@]}")
-   string="${string#*$sep}"
+   if [[ $onlysep == 1 ]]; then
+      parse="${string%%$sep*}"
+      string="${string/$parse$sep/}"
+      [[ ${parse:0:1} == " " ]] && parse="${parse:1}"
 
-   [[ $string != *$sep* ]] && _force_parsing "$string"
-   output+=("${string%%$sep*}")
-   string="${string#*$sep}"
+   elif [[ $anysep == 1 ]]; then
+      parse_spc="${string%% *}"
+      parse_sep="${string%%$sep*}"
+
+      if [[ ${#parse_spc} -lt ${#parse_sep} ]]; then
+         parse="$parse_spc"
+         string="${string/$parse /}"
+      else
+         parse="$parse_sep"
+         string="${string/$parse$sep/}"
+      fi
+
+   else
+      [[ ${string:0:1} == "$sep" ]] && betweensep=1
+
+      if [[ $betweensep == 1 ]]; then
+         parse="${string%%$sep *}"
+         string="${string/$parse$sep /}"
+         parse="${parse:1}"
+      else
+         parse="${string%% *}"
+         string="${string/$parse /}"
+      fi
+   fi
+
+   # Add to output list
+   [[ -n $parse ]] && output+=("$parse")
+
+   # In case string does not contains sep anymore, speed the process
+   if [[ $string != *$sep* && $onlysep != 1 ]]; then
+      _bash_parsing "$string"
+   elif [[ $string != *$sep* ]]; then
+      [[ ${string:0:1} == " " ]] && string="${string:1}"
+      output+=("$string")
+      string=""
+   fi
 done
 
 _output "${output[@]}"
