@@ -98,12 +98,18 @@ until [[ -z $string ]]; do
       [[ ${string:0:1} == "$sep" ]] && betweensep=1
 
       if [[ $betweensep == 1 ]]; then
-         parse="${string%%$sep *}"
-         string="${string/$parse$sep /}"
+         parse="${string%$sep *}"
+         if [[ $parse == $string ]]; then
+            [[ ${parse: -1} == "$sep" ]] && parse="${parse:0:-1}"
+            string=""
+         fi
          parse="${parse:1}"
+         string="${string/$sep$parse$sep/}"
+         betweensep=0
       else
          parse="${string%% *}"
          string="${string/$parse /}"
+         [[ $parse == $string ]] && string=""
       fi
    fi
 
@@ -111,9 +117,12 @@ until [[ -z $string ]]; do
    [[ -n $parse ]] && output+=("$parse")
 
    # In case string does not contains sep anymore, speed the process
-   if [[ $string != *$sep* && $onlysep != 1 ]]; then
+   onlyspaces="${string// /}"
+   [[ -z $onlyspaces ]] && string=""
+
+   if [[ -n $string && $string != *$sep* && $onlysep != 1 ]]; then
       _bash_parsing "$string"
-   elif [[ $string != *$sep* ]]; then
+   elif [[ -n $string && $string != *$sep* ]]; then
       [[ ${string:0:1} == " " ]] && string="${string:1}"
       output+=("$string")
       string=""
